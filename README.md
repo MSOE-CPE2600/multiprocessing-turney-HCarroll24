@@ -1,1 +1,2 @@
 # System Programming Lab 11 Multiprocessing
+Program tht invokes mandel 50 times and varies parameters slightly with each new image to "fly" into the Mandelbrot set. Mandelmovie accepts at least one command line argument which will be the number of process used to calculate the frames.
