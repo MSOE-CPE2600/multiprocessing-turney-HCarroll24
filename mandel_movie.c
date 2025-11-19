@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     // Default value if no command line parameter given
     const char *outfile = "mandel_movie.mpg";
     int num_child_processes = 1;
+	int num_threads = 1;
     
     // constants and variables
     int frames = 50;
@@ -71,6 +72,9 @@ int main(int argc, char *argv[])
                 break;
 			case 'o':
 				outfile = optarg;
+				break;
+			case 't':
+				num_threads = atoi(optarg);
 				break;
 			case 'h':
 				show_help();
