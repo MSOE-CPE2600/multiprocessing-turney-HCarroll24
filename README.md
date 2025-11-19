@@ -7,7 +7,7 @@ first child processes that do not divide evenly. So, if there are 10 extras, the
 go into the first 10 respectively. It saves each file as frame_%03d.jpg.
 
 ## Graph of Runtime Results
-![Lab11-Graph](Lab11-Graph.jpg)
+![Lab11-graph](Lab11-graph.jpg)
 
 ## Discussion of Results
 As I had more and more processes, the runtime was shorter and shorter. It followed an n^2 correlation
