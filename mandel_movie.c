@@ -203,8 +203,57 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 	int width = img->width;
 	int height = img->height;
 
-	// For every pixel in the image...
+	// validate thread count (min 1, max 20)
+	if(threads < 1 || threads > 20) {
+		printf("Invalid thread count. Must be between 1 and 20.\n");
+		// set threads to min or max depending on if less than min or greater than max
+		threads = threads < 1 ? 1 : 20;
+	}
 
+	// only 1 thread base case
+	if (threads == 1) {
+		for(int j = 0; j < height; j++) {
+			for (int i = 0; i < width; i++) {
+				double x = xmin + i * (xmax - xmin) / width;
+				double y = ymin + j * (ymax - ymin) / height;
+				int iterations = iterations_at_point(x, y, max);
+				setPixelCOLOR(img, i, j, iteration_to_color(iterations, max));
+			}
+		}
+		return;
+	}
+
+	// Calculate rows per thread
+	int rows_per_thread = height / threads;
+	int remainder_rows = height % threads;
+
+	// allocate arrays for threads
+	pthread_t* thread_ids = (pthread_t*)malloc(threads * sizeof(pthread_t));
+	thread_data_t* thread_data = (thread_data_t*)malloc(threads * sizeof(thread_data_t));
+
+	// create threads
+	for(int t = 0; t < threads; t++) {
+		thread_data[t].img = img;
+		thread_data[t].xmin = xmin;
+		thread_data[t].xmax = xmax;
+		thread_data[t].ymin = ymin;
+		thread_data[t].ymax = ymax;
+		thread_data[t].max = max;
+		thread_data[t].start_row = t * rows_per_thread + (t < remainder_rows ? t : remainder_rows);
+		thread_data[t].end_row = thread_data[t].start_row + rows_per_thread + (t < remainder_rows ? 1 : 0);
+		pthread_create(&thread_ids[t], NULL, compute_region, &thread_data[t]);
+	}
+
+	// main thread to join all threads
+	for (int t = 0; t < threads; t++) {
+		pthread_join(thread_ids[t], NULL);
+	}
+
+	// free allocated memory
+	free(thread_ids);
+	free(thread_data);
+
+	/*// For every pixel in the image...
 	for(j=0;j<height;j++) {
 
 		for(i=0;i<width;i++) {
@@ -219,7 +268,7 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 			// Set the pixel in the bitmap.
 			setPixelCOLOR(img,i,j,iteration_to_color(iters,max));
 		}
-	}
+	}*/
 }
 
 static void* compute_region(void* arg) {
