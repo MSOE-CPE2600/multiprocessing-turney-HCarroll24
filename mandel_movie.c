@@ -28,6 +28,7 @@ static int iterations_at_point( double x, double y, int max );
 static void compute_image( imgRawImage *img, double xmin, double xmax,
 									double ymin, double ymax, int max );
 static void show_help();
+static void* compute_region(void* arg);
 
 int main(int argc, char *argv[])
 {
@@ -219,6 +220,28 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 			setPixelCOLOR(img,i,j,iteration_to_color(iters,max));
 		}
 	}
+}
+
+static void* compute_region(void* arg) {
+	thread_data_t* data = (thread_data_t*)arg;
+
+	int width = data->img->width;
+
+	for(int j = data->start_row; j <data->end_row; j++) {
+		for(int i = 0; i < width; i++) {
+			// Determine the point in x,y space for that pixeo
+			double x = data->xmin + i * (data->xmax - data->xmin) / width;
+			double y = data->ymin + j * (data->ymax - data->ymin) / height;
+
+			// compute iterations at point
+			int iterations = iterations_at_point(x, y, data->max);
+
+			// set pixel color
+			setPixelCOLOR(data->img, i, j, iteration_to_color(iterations, data->max));
+		}
+	}
+
+	return NULL;
 }
 
 
