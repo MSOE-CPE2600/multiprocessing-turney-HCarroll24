@@ -18,7 +18,9 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
 #include "jpegrw.h"
+#include "mandel_movie.h"
 
 // local routines
 static int iteration_to_color( int i, int max );
@@ -193,7 +195,7 @@ Compute an entire Mandelbrot image, writing each point to the given bitmap.
 Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
 */
 
-void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, double ymax, int max )
+void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, double ymax, int max, int threads)
 {
 	int i,j;
 
