@@ -26,7 +26,7 @@
 static int iteration_to_color( int i, int max );
 static int iterations_at_point( double x, double y, int max );
 static void compute_image( imgRawImage *img, double xmin, double xmax,
-									double ymin, double ymax, int max );
+									double ymin, double ymax, int max, int num_threads );
 static void show_help();
 static void* compute_region(void* arg);
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     int max = 1000;
 
     // Use getopt to identify command line parameter
-    while((c = getopt(argc,argv,"x:y:s:W:H:m:n:o:h"))!=-1) {
+    while((c = getopt(argc,argv,"x:y:s:W:H:m:n:t:o:h"))!=-1) {
 		switch(c) 
 		{
 			case 'x':
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 				compute_image(img, 
 				             xcenter - current_xscale/2, xcenter + current_xscale/2,
 				             ycenter - current_yscale/2, ycenter + current_yscale/2,
-				             max);
+				             max, num_threads);
 
 				// save image in stated file
 				storeJpegImageFile(img, frame_filename);
@@ -196,22 +196,20 @@ Compute an entire Mandelbrot image, writing each point to the given bitmap.
 Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
 */
 
-void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, double ymax, int max, int threads)
+void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, double ymax, int max, int num_threads)
 {
-	int i,j;
-
 	int width = img->width;
 	int height = img->height;
 
 	// validate thread count (min 1, max 20)
-	if(threads < 1 || threads > 20) {
+	if(num_threads < 1 || num_threads > 20) {
 		printf("Invalid thread count. Must be between 1 and 20.\n");
 		// set threads to min or max depending on if less than min or greater than max
-		threads = threads < 1 ? 1 : 20;
+		num_threads = num_threads < 1 ? 1 : 20;
 	}
 
 	// only 1 thread base case
-	if (threads == 1) {
+	if (num_threads == 1) {
 		for(int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				double x = xmin + i * (xmax - xmin) / width;
@@ -224,15 +222,15 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 	}
 
 	// Calculate rows per thread
-	int rows_per_thread = height / threads;
-	int remainder_rows = height % threads;
+	int rows_per_thread = height / num_threads;
+	int remainder_rows = height % num_threads;
 
 	// allocate arrays for threads
-	pthread_t* thread_ids = (pthread_t*)malloc(threads * sizeof(pthread_t));
-	thread_data_t* thread_data = (thread_data_t*)malloc(threads * sizeof(thread_data_t));
+	pthread_t* thread_ids = (pthread_t*)malloc(num_threads * sizeof(pthread_t));
+	thread_data_t* thread_data = (thread_data_t*)malloc(num_threads * sizeof(thread_data_t));
 
 	// create threads
-	for(int t = 0; t < threads; t++) {
+	for(int t = 0; t < num_threads; t++) {
 		thread_data[t].img = img;
 		thread_data[t].xmin = xmin;
 		thread_data[t].xmax = xmax;
@@ -245,7 +243,7 @@ void compute_image(imgRawImage* img, double xmin, double xmax, double ymin, doub
 	}
 
 	// main thread to join all threads
-	for (int t = 0; t < threads; t++) {
+	for (int t = 0; t < num_threads; t++) {
 		pthread_join(thread_ids[t], NULL);
 	}
 
@@ -276,11 +274,11 @@ static void* compute_region(void* arg) {
 
 	int width = data->img->width;
 
-	for(int j = data->start_row; j <data->end_row; j++) {
+		for(int j = data->start_row; j <data->end_row; j++) {
 		for(int i = 0; i < width; i++) {
-			// Determine the point in x,y space for that pixeo
+			// Determine the point in x,y space for that pixel
 			double x = data->xmin + i * (data->xmax - data->xmin) / width;
-			double y = data->ymin + j * (data->ymax - data->ymin) / height;
+			double y = data->ymin + j * (data->ymax - data->ymin) / data->img->height;
 
 			// compute iterations at point
 			int iterations = iterations_at_point(x, y, data->max);

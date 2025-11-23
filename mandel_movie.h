@@ -14,7 +14,7 @@
 
 // struct for thread data
 typedef struct {
-    imagRawImage* img;
+    imgRawImage* img;
     double xmin;
     double xmax;
     double ymin;
@@ -23,3 +23,5 @@ typedef struct {
     int start_row;
     int end_row;
 } thread_data_t;
+
+#endif
