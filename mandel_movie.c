@@ -316,10 +316,11 @@ void show_help()
 	printf("-W <pixels> Width of the image in pixels. (default=1000)\n");
 	printf("-H <pixels> Height of the image in pixels. (default=1000)\n");
 	printf("-n <num>    Number of child processes to use. (default=1)\n");
+	printf("-t <num>    Number of threads to use. (default=1)\n");
 	printf("-o <file>   Set output file. (default=mandel_movie.mpg)\n");
 	printf("-h          Show this help text.\n");
 	printf("\nSome examples are:\n");
-	printf("mandel_movie -n 4\n");
-	printf("mandel_movie -n 8 -x -0.5 -y -0.5 -s 0.2\n");
-	printf("mandel_movie -n 2 -x -.38 -y -.665 -s .05 -m 100\n\n");
+	printf("mandel_movie -n 4 -t 10\n");
+	printf("mandel_movie -n 8 -x -0.5 -y -0.5 -s 0.2 -t 10\n");
+	printf("mandel_movie -n 2 -x -.38 -y -.665 -s .05 -m 100 -t 10\n\n");
 }
